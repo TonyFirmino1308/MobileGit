@@ -1,0 +1,50 @@
+name: Android Build
+ 
+on:
+  pull_request:
+    branches: ["master"]
+  push:
+    branches: ["master"]
+ 
+jobs:
+  build:
+    runs-on: ubuntu-latest
+ 
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.1
+ 
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4.0.0
+        with:
+          java-version: '21'
+          distribution: 'adopt'
+ 
+      - name: Change wrapper permissions
+        run: chmod +x ./android/gradlew
+ 
+      - name: Run Mendix Dependencies
+        run: npm install --legacy-peer-deps
+ 
+      - name: Run Mendix Configure
+        run: npm run configure
+ 
+      - name: Build APK with Gradle
+        run: cd android && ./gradlew assembleAppstoreDebug --stacktrace
+ 
+      - name: Build AAB with Gradle
+        run: cd android && ./gradlew bundleAppstoreDebug --stacktrace
+ 
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: poc-dataprev-apk
+          overwrite: true
+          path: android/app/build/outputs/apk/appstore/debug/app-appstore-debug.apk
+ 
+      - name: Upload AAB Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: poc-dataprev-aab
+          overwrite: true
+          path: android/app/build/outputs/bundle/appstoreDebug/app-appstore-debug.aab
